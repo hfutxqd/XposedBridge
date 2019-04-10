@@ -448,15 +448,29 @@ import static de.robv.android.xposed.XposedHelpers.setStaticObjectField;
 	/*package*/ static void loadModules() throws IOException {
 		final String filename = BASE_DIR + "conf/modules.list";
 		BaseService service = SELinuxHelper.getAppDataFileService();
-		if (!service.checkFileExists(filename)) {
-			Log.e(TAG, "Cannot load any modules because " + filename + " was not found");
-			return;
-		}
-
 		ClassLoader topClassLoader = XposedBridge.BOOTCLASSLOADER;
 		ClassLoader parent;
 		while ((parent = topClassLoader.getParent()) != null) {
 			topClassLoader = parent;
+		}
+
+		try {
+			if (service.checkFileExists("/system/xposed_modules.list")) {
+				Log.d(TAG, "load modules from system");
+				InputStream stream = service.getFileInputStream("/system/xposed_modules.list");
+				BufferedReader apks = new BufferedReader(new InputStreamReader(stream));
+				String apk;
+				while ((apk = apks.readLine()) != null) {
+					loadModule(apk, topClassLoader);
+				}
+				apks.close();
+			}
+		} catch (Throwable t) {
+			Log.e(TAG, "Could not load modules from system", t);
+		}
+		if (!service.checkFileExists(filename)) {
+			Log.e(TAG, "Cannot load any modules because " + filename + " was not found");
+			return;
 		}
 
 		InputStream stream = service.getFileInputStream(filename);
