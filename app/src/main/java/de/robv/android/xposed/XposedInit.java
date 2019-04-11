@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
 import android.os.Process;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -461,7 +462,9 @@ import static de.robv.android.xposed.XposedHelpers.setStaticObjectField;
 				BufferedReader apks = new BufferedReader(new InputStreamReader(stream));
 				String apk;
 				while ((apk = apks.readLine()) != null) {
-					loadModule(apk, topClassLoader);
+					if (!TextUtils.isEmpty(apk)) {
+						loadModule(apk, topClassLoader);
+					}
 				}
 				apks.close();
 			}
